@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>البدل - وسيلة تعليمية تفاعلية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Amiri', serif;
+            background-color: #fcfcfd;
+            color: #374151;
+            line-height: 2.2; 
+        }
+        
+        h1, h2, button, .nav-num, .score-stat {
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .section-fade {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .arabic-example {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            white-space: nowrap;
+        }
+
+        .option-btn {
+            transition: all 0.3s ease;
+            border: 2px solid #f3f4f6;
+            text-align: right;
+            width: 100%;
+            padding: 1.2rem;
+            border-radius: 1.2rem;
+            font-size: 1.3rem;
+            background-color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: #f5f7ff;
+            border-color: #a5b4fc;
+            transform: translateX(-5px);
+        }
+
+        .option-error {
+            background-color: #fef2f2 !important;
+            border-color: #fecaca !important;
+            color: #991b1b !important;
+        }
+        
+        .option-correct {
+            background-color: #f0fdf4 !important;
+            border-color: #86efac !important;
+            color: #166534 !important;
+        }
+
+        .word {
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+            margin: 4px;
+            background: white;
+            border: 2px solid #f3f4f6;
+            position: relative;
+            overflow: hidden;
+            font-size: 1.5rem;
+        }
+        
+        .word:hover:not(.disabled) {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #6366f1;
+        }
+        
+        .word.selected-correct {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-color: #047857;
+            animation: correctPulse 0.6s ease-out;
+        }
+        
+        .word.selected-wrong {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border-color: #b91c1c;
+            animation: shake 0.5s ease-out;
+        }
+
+        .nav-num {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 1.2rem;
+        }
+        .nav-num-pending { background-color: #f3f4f6; color: #9ca3af; }
+        .nav-num-current { border-color: #6366f1; color: #6366f1; background-color: #eef2ff; }
+        .nav-num-done { background-color: #10b981; color: white; }
+        .nav-num-wrong { background-color: #ef4444; color: white; }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+
+        .feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; pointer-events: none; opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feedback-overlay.show { opacity: 1; }
+        .feedback-overlay.correct { background: rgba(16, 185, 129, 0.9); }
+        .feedback-overlay.wrong { background: rgba(239, 68, 68, 0.9); }
+
+        .score-stat {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 10px 20px;
+        }
+
+        .confetti-piece {
+            position: absolute; width: 10px; height: 10px;
+            animation: confetti 1s ease-out forwards;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header id="main-header" class="text-center mb-12 section-fade">
+            <h1 class="text-5xl font-bold text-slate-800 mb-4">البَدَلُ</h1>
+            <div class="h-1 w-24 bg-indigo-200 mx-auto rounded-full mb-4"></div>
+            <p class="text-2xl text-slate-400 italic">"التَّابِعُ الْمَقْصُودُ بِالْحُكْمِ بِلَا وَاسِطَةٍ"</p>
+        </header>
+
+        <!-- Main Material -->
+        <section id="materi-section" class="section-fade">
+            <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-50 mb-10">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+                    <span class="ml-3 text-3xl">📘</span>
+                    تعريف البدل
+                </h2>
+                <p class="text-2xl text-slate-600 mb-8 bg-indigo-50/40 p-6 rounded-2xl border-r-8 border-indigo-400 font-bold leading-relaxed text-right">
+                    البَدَلُ: هُوَ التَّابِعُ الْمَقْصُودُ بِالْحُكْمِ بِلَا وَاسِطَةٍ، وَيَتْبَعُ الْمُبْدَلَ مِنْهُ فِي إِعْرَابِهِ.
+                </p>
+
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">أنواع البدل وأمثلتها:</h2>
+                <div class="space-y-3 mb-10">
+                    <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-100 flex flex-wrap items-center justify-between gap-4">
+                        <span class="text-lg font-bold text-rose-700">١. مطابق:</span>
+                        <div class="flex items-center gap-4">
+                            <span class="arabic-example italic font-bold">سَافَرَ أَخُوكَ <span class="text-rose-600">مُحَمَّدٌ</span></span>
+                            <span class="text-slate-300">|</span>
+                            <span class="description-text">محمد هو نفس الأخ</span>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 flex flex-wrap items-center justify-between gap-4">
+                        <span class="text-lg font-bold text-emerald-700">٢. بعض من كل:</span>
+                        <div class="flex items-center gap-4">
+                            <span class="arabic-example italic font-bold">قَرَأْتُ الكِتَابَ <span class="text-emerald-600">نِصْفَهُ</span></span>
+                            <span class="text-slate-300">|</span>
+                            <span class="description-text">النصف جزء مادي من الكتاب</span>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-blue-50/50 border border-blue-100 flex flex-wrap items-center justify-between gap-4">
+                        <span class="text-lg font-bold text-blue-700">٣. اشتمال:</span>
+                        <div class="flex items-center gap-4">
+                            <span class="arabic-example italic font-bold">أَعْجَبَنِي الطَّالِبُ <span class="text-blue-600">ذَكَاؤُهُ</span></span>
+                            <span class="text-slate-300">|</span>
+                            <span class="description-text">الذكاء صفة يشتمل عليها</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+                    <span class="ml-3 text-3xl">🔍</span>
+                    شرح مفصل (تأمل وتحليل)
+                </h2>
+                <div class="bg-slate-50 p-6 rounded-2xl text-lg text-slate-600 space-y-4">
+                    <p>
+                        ١. في مثال <strong>(سافر أخوك محمد)</strong>: تجد أن الكلمة المقصودة في الحكم فعلاً هي (محمد)، وذكرت كلمة (أخوك) تمهيداً له؛ ولذلك لو حذفت لصار الكلام مستقيماً هكذا: "سافر محمد".
+                    </p>
+                    <p>
+                        ٢. في مثال <strong>(قَرَأْتُ الكتابَ نصفَه)</strong>: تجد أن المقروء فعلاً هو (نصف الكتاب) لا الكتاب كله، والنصف جزء مادي حقيقي من الكتاب، ولذا فهو <strong>بدل بعض من كل</strong>.
+                    </p>
+                    <p>
+                        ٣. في مثال <strong>(أعجبني الطالب ذكاؤه)</strong>: تجد أن الذي أعجبك هو (ذكاء الطالب)، وذكاؤه ليس كله ولا جزءاً مادياً منه، وإنما الطالب (المتبوع) يشتمل على أشياء منها الذكاء، ولذلك فهو <strong>بدل اشتمال</strong>.
+                    </p>
+                    <p class="font-bold border-t border-slate-200 pt-4 text-indigo-700">
+                        * قاعدة مهمة: البدل يتبع المبدل منه في إعرابه، وفي بدل (البعض) و(الاشتمال) لا بد من وجود <u>ضمير</u> يعود على المبدل منه ويناسبه.
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button onclick="goToChoice()" class="px-12 py-4 bg-indigo-600 text-white rounded-full font-bold text-2xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
+                    انتقل إلى اختبار الفهم 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- Quiz Choice Section -->
+        <section id="choice-section" class="hidden section-fade">
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-50 text-center">
+                <h2 class="text-3xl font-bold text-slate-800 mb-10">اختر نوع التدريب</h2>
+                <div class="flex flex-col md:flex-row gap-6 justify-center">
+                    <button onclick="startQuiz1()" class="px-10 py-6 bg-indigo-600 text-white rounded-3xl font-bold text-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex-1 max-w-sm">
+                        <div class="text-4xl mb-3">📝</div>
+                        التدريب الأول
+                    </button>
+                    <button onclick="startQuiz2()" class="px-10 py-6 bg-purple-600 text-white rounded-3xl font-bold text-xl hover:bg-purple-700 transition-all shadow-lg active:scale-95 flex-1 max-w-sm">
+                        <div class="text-4xl mb-3">📖</div>
+                        التدريب الثاني
+                    </button>
+                </div>
+                <div class="mt-12">
+                    <button onclick="backToMateri()" class="text-indigo-600 font-bold hover:underline text-lg">العودة للشرح</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz 1 Container -->
+        <section id="quiz1-section" class="hidden section-fade">
+            <div class="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-slate-50">
+                <div class="flex justify-between items-center mb-10 border-b border-slate-50 pb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">التدريب الأول</h2>
+                    <div id="q1-progress" class="text-indigo-500 font-bold text-xl italic font-tajawal">سؤال ١ من ٥</div>
+                </div>
+                <div id="quiz1-content"></div>
+
+                <div id="q1-nav" class="mt-12 flex justify-center gap-2 flex-wrap"></div>
+
+                <div id="quiz1-result" class="hidden text-center py-10">
+                    <div class="text-7xl mb-6">🏆</div>
+                    <h3 class="text-3xl font-bold text-slate-800 mb-4">انتهى التدريب الأول</h3>
+                    <p id="q1-score-text" class="text-2xl font-bold text-indigo-600 mb-8"></p>
+                    <button onclick="backToChoice()" class="px-8 py-3 bg-slate-800 text-white rounded-full font-bold text-xl">العودة لصفحة التمارين</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz 2 Container -->
+        <section id="quiz2-section" class="hidden section-fade">
+            <div class="bg-indigo-600 text-white p-6 rounded-t-[3rem] shadow-lg flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">📖</div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">التدريب الثاني</h2>
+                        <p class="text-xs opacity-80">استخرج البدل من الآية الكريمة</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="score-stat text-center">
+                        <span id="q2-correct-count" class="block text-xl font-bold">٠</span>
+                        <span class="text-[10px] uppercase">صحيح</span>
+                    </div>
+                    <div class="score-stat text-center">
+                        <span id="q2-wrong-count" class="block text-xl font-bold">٠</span>
+                        <span class="text-[10px] uppercase">خطأ</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-8 md:p-10 rounded-b-[3rem] shadow-xl border border-slate-100">
+                <div id="q2-active-content">
+                    <div class="flex justify-center mb-6">
+                        <div id="q2-badge" class="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full text-lg font-bold shadow-md">السؤال ١</div>
+                    </div>
+                    <div id="q2-ayah-container" class="bg-indigo-50 p-6 rounded-2xl mb-8 border-r-4 border-indigo-400">
+                        <p id="q2-ayah-text" class="text-3xl text-center leading-relaxed font-bold text-slate-700"></p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <p class="text-lg">اضغط على الكلمة التي تمثل <span class="font-bold text-indigo-600">البدل</span>:</p>
+                    </div>
+                    <div id="q2-sentence-area" class="flex flex-wrap justify-center gap-3 mb-8"></div>
+                    
+                    <div id="q2-type-options" class="hidden mt-8 p-6 bg-slate-50 rounded-3xl border border-slate-200 animate-fadeIn">
+                        <p class="text-center text-xl mb-6 font-bold">أحسنت! ما نوع البدل الذي اخترته؟</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button onclick="checkQ2Type('مطابق')" class="py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-colors">بدل مطابق</button>
+                            <button onclick="checkQ2Type('بعض')" class="py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 transition-colors">بدل بعض من كل</button>
+                            <button onclick="checkQ2Type('اشتمال')" class="py-3 bg-pink-500 text-white rounded-xl font-bold hover:bg-pink-600 transition-colors">بدل اشتمال</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="q2-nav" class="mt-12 flex justify-center gap-2 flex-wrap"></div>
+
+                <div id="q2-result" class="hidden text-center py-10">
+                    <div id="q2-result-emoji" class="text-7xl mb-4">🎉</div>
+                    <h3 class="text-4xl font-bold mb-4 text-slate-800">انتهى التدريب الثاني!</h3>
+                    <div class="bg-indigo-600 text-white p-8 rounded-3xl inline-block mb-8 shadow-lg">
+                        <p class="text-xl mb-2">النتيجة النهائية</p>
+                        <p id="q2-final-percentage" class="text-5xl font-bold">٠٪</p>
+                    </div>
+                    <br>
+                    <button onclick="backToChoice()" class="px-10 py-3 bg-slate-800 text-white rounded-full font-bold hover:bg-slate-900 transition-colors">العودة لصفحة التمارين</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="feedback-overlay" class="feedback-overlay">
+        <div class="text-center text-white">
+            <div id="feedback-icon" class="text-9xl mb-4"></div>
+            <div id="feedback-text" class="text-5xl font-bold"></div>
+        </div>
+    </div>
+
+    <script>
+        // Helper to convert numbers to Arabic
+        function toAr(num) {
+            const arDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return num.toString().replace(/\d/g, d => arDigits[d]);
+        }
+
+        const quiz1Data = [
+            { id: 1, q: "ما هو البدل؟", options: [{t:"أ) كلمة تصف ما قبلها.",c:false}, {t:"ب) التابع المقصود بالحكم، ويتبع ما قبله في الإعراب.",c:true}, {t:"ج) حرف يربط بين جملتين.",c:false}] },
+            { id: 2, q: "في جملة 'سافر أخوك محمدٌ'، ما نوع البدل؟", options: [{t:"أ) بدل كُل من كُل (مطابق).",c:true}, {t:"ب) بدل بعض من كل.",c:false}, {t:"ج) بدل اشتمال.",c:false}] },
+            { id: 3, q: "في جملة 'قَرَأْتُ الكتابَ نصفَه'، لماذا 'نصفه' بدل بعض من كل؟", options: [{t:"أ) لأن النصف هو كل الكتاب.",c:false}, {t:"ب) لأن النصف جزء حقيقي ومادي من الكتاب.",c:true}, {t:"ج) لأن النصف صفة معنوية للكتاب.",c:false}] },
+            { id: 4, q: "في جملة 'أعجبني الطالبُ ذكاؤُه'، ما نوع البدل؟", options: [{t:"أ) بدل كل من كل.",c:false}, {t:"ب) بدل بعض من كل.",c:false}, {t:"ج) بدل اشتمال.",c:true}] },
+            { id: 5, q: "أي أنواع البدل يجب أن يحتوي على (ضمير) يعود على ما قبله؟", options: [{t:"أ) بدل الكل من الكل فقط.",c:false}, {t:"ب) بدل البعض من الكل وبدل الاشتمال.",c:true}, {t:"ج) جميع الأنواع لا تحتاج إلى ضمير.",c:false}] }
+        ];
+
+        const quiz2Data = [
+            { id: 1, ayah: "❝ وَلَوْلَا دَفْعُ اللَّهِ النَّاسَ بَعْضَهُمْ بِبَعْضٍ ❞", sentence: ["وَلَوْلَا", "دَفْعُ", "اللَّهِ", "النَّاسَ", "بَعْضَهُمْ"], correctIndex: 4, correctType: "بعض" },
+            { id: 2, ayah: "❝ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ ❞", sentence: ["اهْدِنَا", "الصِّرَاطَ", "الْمُسْتَقِيمَ", "صِرَاطَ", "الَّذِينَ"], correctIndex: 3, correctType: "مطابق" },
+            { id: 3, ayah: "❝ وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ مَن اسْتَطَاعَ إِلَيْهِ سَبِيلاً ❞", sentence: ["وَلِلَّهِ", "عَلَى", "النَّاسِ", "حِجُّ", "الْبَيْتِ"], correctIndex: 3, correctType: "بعض" },
+            { id: 4, ayah: "❝ أَبُو حَفْصٍ عُمَرُ خَلِيفَةٌ عادِلٌ ❞", sentence: ["أَبُو", "حَفْصٍ", "عُمَرُ", "خَلِيفَةٌ", "عادِلٌ"], correctIndex: 2, correctType: "مطابق" },
+            { id: 5, ayah: "❝ جَعَلَ اللَّهُ الْكَعْبَةَ الْبَيْتَ الْحَرَامَ قِيَامًا لِّلنَّاسِ ❞", sentence: ["جَعَلَ", "اللَّهُ", "الْكَعْبَةَ", "الْبَيْتَ", "الْحَرَامَ"], correctIndex: 3, correctType: "مطابق" },
+            { id: 6, ayah: "❝ إِلَى صِرَاطٍ مُّسْتَقِيمٍ صِرَاطِ اللَّهِ ❞", sentence: ["إِلَى", "صِرَاطٍ", "مُّسْتَقِيمٍ", "صِرَاطِ", "اللَّهِ"], correctIndex: 3, correctType: "مطابق" },
+            { id: 7, ayah: "❝ هَلْ أَتَاكَ حَدِيثُ الْجُنُودِ فِرْعَوْنَ وَثَمُودَ ❞", sentence: ["هَلْ", "أَتَاكَ", "حَدِيثُ", "الْجُنُودِ", "فِرْعَوْنَ"], correctIndex: 4, correctType: "مطابق" },
+            { id: 8, ayah: "❝ لَنَسْفَعًا بِالنَّاصِيَةِ نَاصِيَةٍ كَاذِبَةٍ خَاطِئَةٍ ❞", sentence: ["لَنَسْفَعًا", "بِالنَّاصِيَةِ", "نَاصِيَةٍ", "كَاذِبَةٍ", "خَاطِئَةٍ"], correctIndex: 2, correctType: "مطابق" },
+            { id: 9, ayah: "❝ وَوَهَبْنَا لَهُ مِن رَّحْمَتِنَا أَخَاهُ هَارُونَ نَبِيًّا ❞", sentence: ["وَوَهَبْنَا", "لَهُ", "أَخَاهُ", "هَارُونَ", "نَبِيًّا"], correctIndex: 3, correctType: "مطابق" },
+            { id: 10, ayah: "❝ يَشِبُّ مَعَهُ خَصْلَتَانِ الحِرْصُ وَالْأَمَلُ ❞", sentence: ["يَشِبُّ", "مَعَهُ", "خَصْلَتَانِ", "الحِرْصُ", "وَالْأَمَلُ"], correctIndex: 3, correctType: "بعض" },
+            { id: 11, ayah: "❝ بَلَغْنَا السَّمَاءَ مَجْدُنا وَسَناؤنا ❞", sentence: ["بَلَغْنَا", "السَّمَاءَ", "مَجْدُنا", "وَسَناؤنا", "إِنَّهُ"], correctIndex: 2, correctType: "اشتمال" },
+            { id: 12, ayah: "❝ وَنَادَيْنَاهُ مِن شَاطِئِ الْوَادِ الْأَيْمَنِ بِالْوَادِ الْمُقَدَّسِ طُوًى ❞", sentence: ["وَنَادَيْنَاهُ", "مِن", "شَاطِئِ", "الْوَادِ", "الْمُقَدَّسِ", "طُوًى"], correctIndex: 5, correctType: "مطابق" }
+        ];
+
+        let q1Idx = 0, q1Score = 0;
+        let q2Idx = 0, q2Correct = 0, q2Wrong = 0, q2IsWordCorrect = false;
+        let q1Answered = Array(5).fill(false);
+        let q1ResultType = Array(5).fill(null); 
+        let q2Answered = Array(12).fill(false);
+        let q2ResultType = Array(12).fill(null); 
+
+        function findNextUnanswered(answeredArr, currentIdx) {
+            for (let i = currentIdx + 1; i < answeredArr.length; i++) {
+                if (!answeredArr[i]) return i;
+            }
+            for (let i = 0; i < currentIdx; i++) {
+                if (!answeredArr[i]) return i;
+            }
+            return -1; 
+        }
+
+        function hideAll() {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('main-header').classList.add('hidden');
+        }
+
+        function backToMateri() {
+            hideAll();
+            document.getElementById('materi-section').classList.remove('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToChoice() {
+            hideAll();
+            document.getElementById('choice-section').classList.remove('hidden');
+        }
+
+        function backToChoice() {
+            hideAll();
+            document.getElementById('choice-section').classList.remove('hidden');
+        }
+
+        function showFeedback(type, text, icon) {
+            const overlay = document.getElementById('feedback-overlay');
+            const iconDiv = document.getElementById('feedback-icon');
+            const textDiv = document.getElementById('feedback-text');
+            overlay.className = `feedback-overlay show ${type}`;
+            iconDiv.textContent = icon;
+            textDiv.textContent = text;
+            setTimeout(() => overlay.classList.remove('show'), 1200);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 30; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti-piece';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = Math.random() * 100 + '%';
+                p.style.backgroundColor = ['#6366f1', '#a855f7', '#ec4899', '#10b981'][Math.floor(Math.random()*4)];
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1000);
+            }
+        }
+
+        // --- Quiz 1 ---
+        function startQuiz1() {
+            q1Idx = 0; q1Score = 0; q1Answered.fill(false); q1ResultType.fill(null);
+            hideAll();
+            document.getElementById('quiz1-section').classList.remove('hidden');
+            document.getElementById('quiz1-result').classList.add('hidden');
+            document.getElementById('quiz1-content').classList.remove('hidden');
+            document.getElementById('q1-nav').classList.remove('hidden');
+            renderQ1();
+        }
+
+        function renderQ1() {
+            const data = quiz1Data[q1Idx];
+            const content = document.getElementById('quiz1-content');
+            document.getElementById('q1-progress').innerText = `سؤال ${toAr(q1Idx + 1)} من ${toAr(5)}`;
+            
+            let html = `<p class="text-3xl text-slate-700 mb-8 font-bold">${data.q}</p><div class="space-y-4">`;
+            data.options.forEach((opt, i) => {
+                const isAnswered = q1Answered[q1Idx];
+                let extraClass = "";
+                if (isAnswered) {
+                   if (opt.c) extraClass = "option-correct";
+                }
+                html += `<button onclick="handleQ1Answer(this, ${i})" class="option-btn ${extraClass} ${isAnswered ? 'opacity-60' : ''}" ${isAnswered ? 'disabled' : ''}><span></span><span class="mr-4">${opt.t}</span></button>`;
+            });
+            content.innerHTML = html + `</div>`;
+            renderQ1Nav();
+        }
+
+        function renderQ1Nav() {
+            const nav = document.getElementById('q1-nav');
+            nav.innerHTML = '';
+            for(let i=0; i<5; i++) {
+                const btn = document.createElement('div');
+                let typeClass = "nav-num-pending";
+                if (q1ResultType[i] === 'correct') typeClass = "nav-num-done";
+                else if (q1ResultType[i] === 'wrong') typeClass = "nav-num-wrong";
+                else if (i === q1Idx) typeClass = "nav-num-current";
+                
+                btn.className = `nav-num ${typeClass}`;
+                btn.innerText = toAr(i + 1);
+                btn.onclick = () => { q1Idx = i; renderQ1(); };
+                nav.appendChild(btn);
+            }
+        }
+
+        function handleQ1Answer(btn, i) {
+            const data = quiz1Data[q1Idx];
+            const isCorrect = data.options[i].c;
+            q1Answered[q1Idx] = true;
+            
+            if (isCorrect) {
+                q1Score++;
+                q1ResultType[q1Idx] = 'correct';
+                showFeedback("correct", "رائع!", "✅");
+            } else {
+                q1ResultType[q1Idx] = 'wrong';
+                btn.classList.add('option-error');
+                showFeedback("wrong", "إجابة خاطئة", "❌");
+            }
+            
+            renderQ1Nav();
+            setTimeout(() => { 
+                const next = findNextUnanswered(q1Answered, q1Idx);
+                if (next !== -1) {
+                    q1Idx = next;
+                    renderQ1();
+                } else {
+                    finishQuiz1();
+                }
+            }, 1400);
+        }
+
+        function finishQuiz1() {
+            document.getElementById('quiz1-content').classList.add('hidden');
+            document.getElementById('q1-nav').classList.add('hidden');
+            const res = document.getElementById('quiz1-result');
+            res.classList.remove('hidden');
+            document.getElementById('q1-score-text').innerText = `حصلت على ${toAr(q1Score)} من ${toAr(5)}`;
+            if(q1Score === 5) createConfetti();
+        }
+
+        // --- Quiz 2 ---
+        function startQuiz2() {
+            q2Idx = 0; q2Correct = 0; q2Wrong = 0; q2Answered.fill(false); q2ResultType.fill(null);
+            hideAll();
+            document.getElementById('quiz2-section').classList.remove('hidden');
+            document.getElementById('q2-result').classList.add('hidden');
+            document.getElementById('q2-active-content').classList.remove('hidden');
+            document.getElementById('q2-nav').classList.remove('hidden');
+            updateQ2Stats();
+            renderQ2();
+        }
+
+        function renderQ2() {
+            const q = quiz2Data[q2Idx];
+            q2IsWordCorrect = false;
+            document.getElementById('q2-badge').innerText = `السؤال ${toAr(q2Idx + 1)}`;
+            document.getElementById('q2-ayah-text').innerText = q.ayah;
+            document.getElementById('q2-type-options').classList.add('hidden');
+            
+            const area = document.getElementById('q2-sentence-area');
+            area.innerHTML = '';
+            
+            if (q2Answered[q2Idx]) {
+                const statusText = q2ResultType[q2Idx] === 'correct' ? 'تم حل هذا السؤال بنجاح ✨' : 'عذراً، الإجابة كانت غير دقيقة 🔄';
+                const statusBg = q2ResultType[q2Idx] === 'correct' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+                area.innerHTML = `<div class="p-6 ${statusBg} rounded-2xl font-bold text-2xl">${statusText}</div>`;
+            } else {
+                q.sentence.forEach((word, i) => {
+                    const s = document.createElement('span');
+                    s.className = 'word text-2xl font-bold';
+                    s.innerText = word;
+                    s.onclick = () => checkQ2Word(s, i === q.correctIndex);
+                    area.appendChild(s);
+                });
+            }
+            renderQ2Nav();
+        }
+
+        function renderQ2Nav() {
+            const nav = document.getElementById('q2-nav');
+            nav.innerHTML = '';
+            for(let i=0; i<12; i++) {
+                const btn = document.createElement('div');
+                let typeClass = "nav-num-pending";
+                if (q2ResultType[i] === 'correct') typeClass = "nav-num-done";
+                else if (q2ResultType[i] === 'wrong') typeClass = "nav-num-wrong";
+                else if (i === q2Idx) typeClass = "nav-num-current";
+                
+                btn.className = `nav-num ${typeClass}`;
+                btn.innerText = toAr(i + 1);
+                btn.onclick = () => { q2Idx = i; renderQ2(); };
+                nav.appendChild(btn);
+            }
+        }
+
+        function checkQ2Word(el, isCorrect) {
+            if (q2IsWordCorrect || q2Answered[q2Idx]) return;
+            if (isCorrect) {
+                el.classList.add('selected-correct');
+                q2IsWordCorrect = true;
+                showFeedback('correct', 'أحسنت!', '✨');
+                setTimeout(() => document.getElementById('q2-type-options').classList.remove('hidden'), 800);
+            } else {
+                el.classList.add('selected-wrong');
+                q2Wrong++;
+                q2Answered[q2Idx] = true;
+                q2ResultType[q2Idx] = 'wrong';
+                showFeedback('wrong', 'حاول الانتباه أكثر!', '🔄');
+                updateQ2Stats();
+                renderQ2Nav();
+                moveToNextQ2();
+            }
+        }
+
+        function checkQ2Type(type) {
+            const q = quiz2Data[q2Idx];
+            q2Answered[q2Idx] = true;
+            if (type === q.correctType) {
+                q2Correct++;
+                q2ResultType[q2Idx] = 'correct';
+                showFeedback('correct', 'إجابة رائعة!', '🎉');
+                createConfetti();
+            } else {
+                q2Wrong++;
+                q2ResultType[q2Idx] = 'wrong';
+                showFeedback('wrong', 'النوع غير صحيح!', '❌');
+            }
+            updateQ2Stats();
+            renderQ2Nav();
+            moveToNextQ2();
+        }
+
+        function moveToNextQ2() {
+            setTimeout(() => { 
+                const next = findNextUnanswered(q2Answered, q2Idx);
+                if (next !== -1) {
+                    q2Idx = next;
+                    renderQ2();
+                } else {
+                    finishQuiz2();
+                }
+            }, 1400);
+        }
+
+        function updateQ2Stats() {
+            document.getElementById('q2-correct-count').innerText = toAr(q2Correct);
+            document.getElementById('q2-wrong-count').innerText = toAr(q2Wrong);
+        }
+
+        function finishQuiz2() {
+            document.getElementById('q2-active-content').classList.add('hidden');
+            document.getElementById('q2-nav').classList.add('hidden');
+            const res = document.getElementById('q2-result');
+            res.classList.remove('hidden');
+            const p = Math.round((q2Correct / quiz2Data.length) * 100);
+            document.getElementById('q2-final-percentage').innerText = toAr(p) + '٪';
+            if(p >= 80) createConfetti();
+        }
+
+    </script>
+</body>
+</html>
