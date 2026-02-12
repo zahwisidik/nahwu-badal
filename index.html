@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>البدل - وسيلة تعليمية تفاعلية</title>
+    <title>البدل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -167,7 +167,7 @@
         <header id="main-header" class="text-center mb-12 section-fade">
             <h1 class="text-5xl font-bold text-slate-800 mb-4">البَدَلُ</h1>
             <div class="h-1 w-24 bg-indigo-200 mx-auto rounded-full mb-4"></div>
-            <p class="text-2xl text-slate-400 italic">"التَّابِعُ الْمَقْصُودُ بِالْحُكْمِ بِلَا وَاسِطَةٍ"</p>
+            <p class="text-2xl text-slate-400 italic">"التَّابِعُ الْمَقْصُودُ بِالْحُكْمِ بِلَا وَاسِطَةٍ"</p>
         </header>
 
         <!-- Main Material -->
@@ -178,7 +178,7 @@
                     تعريف البدل
                 </h2>
                 <p class="text-2xl text-slate-600 mb-8 bg-indigo-50/40 p-6 rounded-2xl border-r-8 border-indigo-400 font-bold leading-relaxed text-right">
-                    البَدَلُ: هُوَ التَّابِعُ الْمَقْصُودُ بِالْحُكْمِ بِلَا وَاسِطَةٍ، وَيَتْبَعُ الْمُبْدَلَ مِنْهُ فِي إِعْرَابِهِ.
+                    البَدَلُ: هُوَ التَّابِعُ الْمَقْصُودُ بِالْحُكْمِ بِلَا وَاسِطَةٍ، وَيَتْبَعُ الْمُبْدَلَ مِنْهُ فِي إِعْرَابِهِ.
                 </p>
 
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">أنواع البدل وأمثلتها:</h2>
@@ -186,7 +186,7 @@
                     <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-100 flex flex-wrap items-center justify-between gap-4">
                         <span class="text-lg font-bold text-rose-700">١. مطابق:</span>
                         <div class="flex items-center gap-4">
-                            <span class="arabic-example italic font-bold">سَافَرَ أَخُوكَ <span class="text-rose-600">مُحَمَّدٌ</span></span>
+                            <span class="arabic-example italic font-bold">سَافَرَ أَخُوكَ <span class="text-rose-600">مُحَمَّدٌ</span></span>
                             <span class="text-slate-300">|</span>
                             <span class="description-text">محمد هو نفس الأخ</span>
                         </div>
@@ -202,7 +202,7 @@
                     <div class="p-4 rounded-xl bg-blue-50/50 border border-blue-100 flex flex-wrap items-center justify-between gap-4">
                         <span class="text-lg font-bold text-blue-700">٣. اشتمال:</span>
                         <div class="flex items-center gap-4">
-                            <span class="arabic-example italic font-bold">أَعْجَبَنِي الطَّالِبُ <span class="text-blue-600">ذَكَاؤُهُ</span></span>
+                            <span class="arabic-example italic font-bold">أَعْجَبَنِي الطَّالِبُ <span class="text-blue-600">ذَكَاؤُهُ</span></span>
                             <span class="text-slate-300">|</span>
                             <span class="description-text">الذكاء صفة يشتمل عليها</span>
                         </div>
@@ -251,7 +251,10 @@
                     </button>
                 </div>
                 <div class="mt-12">
-                    <button onclick="backToMateri()" class="text-indigo-600 font-bold hover:underline text-lg">العودة للشرح</button>
+                    <button onclick="backToMateri()" class="text-indigo-600 font-bold hover:underline text-lg flex items-center justify-center gap-2 mx-auto">
+                        <span>العودة للشرح</span>
+                        <span class="text-2xl leading-none">↩</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -265,7 +268,15 @@
                 </div>
                 <div id="quiz1-content"></div>
 
-                <div id="q1-nav" class="mt-12 flex justify-center gap-2 flex-wrap"></div>
+                <div id="q1-nav" class="mt-12 flex justify-center gap-2 flex-wrap mb-6"></div>
+
+                <!-- زر العودة للشرح للتدريب الأول -->
+                <div id="q1-back-materi" class="mt-8 pt-6 border-t border-slate-100 text-center hidden">
+                    <button onclick="backToMateri()" class="text-indigo-600 font-bold hover:underline text-lg flex items-center justify-center gap-2 mx-auto transition-all hover:text-indigo-800">
+                        <span>العودة للشرح</span>
+                        <span class="text-2xl leading-none">↩</span>
+                    </button>
+                </div>
 
                 <div id="quiz1-result" class="hidden text-center py-10">
                     <div class="text-7xl mb-6">🏆</div>
@@ -320,7 +331,15 @@
                     </div>
                 </div>
 
-                <div id="q2-nav" class="mt-12 flex justify-center gap-2 flex-wrap"></div>
+                <div id="q2-nav" class="mt-12 flex justify-center gap-2 flex-wrap mb-6"></div>
+
+                <!-- زر العودة للشرح للتدريب الثاني -->
+                <div id="q2-back-materi" class="mt-8 pt-6 border-t border-slate-100 text-center hidden">
+                    <button onclick="backToMateri()" class="text-indigo-600 font-bold hover:underline text-lg flex items-center justify-center gap-2 mx-auto transition-all hover:text-indigo-800">
+                        <span>العودة للشرح</span>
+                        <span class="text-2xl leading-none">↩</span>
+                    </button>
+                </div>
 
                 <div id="q2-result" class="hidden text-center py-10">
                     <div id="q2-result-emoji" class="text-7xl mb-4">🎉</div>
@@ -442,6 +461,7 @@
             document.getElementById('quiz1-result').classList.add('hidden');
             document.getElementById('quiz1-content').classList.remove('hidden');
             document.getElementById('q1-nav').classList.remove('hidden');
+            document.getElementById('q1-back-materi').classList.remove('hidden'); // إظهار زر العودة
             renderQ1();
         }
 
@@ -510,6 +530,7 @@
         function finishQuiz1() {
             document.getElementById('quiz1-content').classList.add('hidden');
             document.getElementById('q1-nav').classList.add('hidden');
+            document.getElementById('q1-back-materi').classList.add('hidden'); // إخفاء زر العودة عند ظهور النتيجة
             const res = document.getElementById('quiz1-result');
             res.classList.remove('hidden');
             document.getElementById('q1-score-text').innerText = `حصلت على ${toAr(q1Score)} من ${toAr(5)}`;
@@ -524,6 +545,7 @@
             document.getElementById('q2-result').classList.add('hidden');
             document.getElementById('q2-active-content').classList.remove('hidden');
             document.getElementById('q2-nav').classList.remove('hidden');
+            document.getElementById('q2-back-materi').classList.remove('hidden'); // إظهار زر العودة
             updateQ2Stats();
             renderQ2();
         }
@@ -628,6 +650,7 @@
         function finishQuiz2() {
             document.getElementById('q2-active-content').classList.add('hidden');
             document.getElementById('q2-nav').classList.add('hidden');
+            document.getElementById('q2-back-materi').classList.add('hidden'); // إخفاء زر العودة عند ظهور النتيجة
             const res = document.getElementById('q2-result');
             res.classList.remove('hidden');
             const p = Math.round((q2Correct / quiz2Data.length) * 100);
